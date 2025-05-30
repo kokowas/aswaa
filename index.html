@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>lecture قراءة - Écoute et Mémorisation</title>
+    <title>lecture - استماع وقراءة</title>
     <style>
         @font-face { font-family: 'HafsFont'; src: url('conv_original-hafs.otf') format('opentype'); }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -101,25 +101,25 @@
 </head>
 <body>
  <div class="page-content-wrapper">
-    <h1 class="surah-title">lecture قراءة</h1>
+    <h1 class="surah-title">lecture</h1>
     <div id="modeSelector">
-        <button id="btnSelectListen" class="mode-select-button">🎵 Écouter</button>
-        <button id="btnSelectMemorize" class="mode-select-button">📖 Mémoriser</button>
+        <button id="btnSelectListen" class="mode-select-button">🎵 استماع</button>
+        <button id="btnSelectMemorize" class="mode-select-button">📖 قراءة</button>
     </div>
     <div id="listenModeUI" style="display: none;">
-        <div class="reader-select-group"><label for="readerSelect">Choisissez le lecteur :</label><select id="readerSelect"></select></div>
+        <div class="reader-select-group"><label for="readerSelect">اختر القارئ:</label><select id="readerSelect"></select></div>
         <audio id="audioPlayerListen"></audio>
         <div class="controls" id="listenControls"><button id="playPauseButtonListen" class="btn-pulsing">▶️</button></div>
     </div>
     <div id="memorizeModeUI" style="display: none;">
-        <div id="speechStatusMemorize">Appuyez sur "Démarrer" et parlez</div>
+        <div id="speechStatusMemorize">اضغط على "ابدأ" وتحدث</div>
         <div id="showFirstWordToggleDiv">
             <input type="checkbox" id="showFirstWordToggle" checked style="vertical-align: middle;">
-            <label for="showFirstWordToggle" style="vertical-align: middle; cursor:pointer;">Afficher le premier mot</label>
+            <label for="showFirstWordToggle" style="vertical-align: middle; cursor:pointer;">إظهار الكلمة الأولى</label>
         </div>
         <div class="controls" id="memorizeControls">
-            <button id="speechButtonMemorize" class="btn-pulsing">🎤 Commencer à parler</button>
-            <button id="resetButtonMemorize">🔄 Réinitialiser</button>
+            <button id="speechButtonMemorize" class="btn-pulsing">🎤 ابدأ التحدث</button>
+            <button id="resetButtonMemorize">🔄 إعادة تعيين</button>
         </div>
     </div>
     <div id="sentence" style="display: none;"></div>
@@ -127,7 +127,7 @@
 <script>
     const SCRIPT_READERS_DATA = [
     {
-        "name": "Lecteur par défaut",
+        "name": "القارئ الافتراضي",
         "audioFile": "farid.mp3",
         "prerollTitle": "farid",
         "prerollTimings": [],
@@ -136,6 +136,10 @@
                 "type": "word",
                 "text": "aujourd'hui",
                 "time": "0.28"
+            },
+            {
+                "type": "ayah",
+                "text": ","
             },
             {
                 "type": "word",
@@ -178,6 +182,10 @@
                 "time": "2.86"
             },
             {
+                "type": "ayah",
+                "text": "."
+            },
+            {
                 "type": "word",
                 "text": "il",
                 "time": "3.64"
@@ -201,6 +209,10 @@
                 "type": "word",
                 "text": "l'oreille",
                 "time": "4.85"
+            },
+            {
+                "type": "ayah",
+                "text": "."
             },
             {
                 "type": "word",
@@ -236,6 +248,10 @@
                 "type": "word",
                 "text": "compétition",
                 "time": "8.47"
+            },
+            {
+                "type": "ayah",
+                "text": "."
             },
             {
                 "type": "word",
@@ -311,6 +327,10 @@
                 "type": "word",
                 "text": "colorier",
                 "time": "14.46"
+            },
+            {
+                "type": "ayah",
+                "text": "."
             }
         ]
     }
@@ -377,7 +397,7 @@
     function initListenMode() { 
         listenModeUI.style.display = 'block'; sentenceContainerShared.style.display = 'block'; sentenceContainerShared.classList.remove('memorize-mode-active'); 
         const readerSelectGroup = document.querySelector('#listenModeUI .reader-select-group'); 
-        if (SCRIPT_READERS_DATA.length <= 1) { if (readerSelectGroup) readerSelectGroup.style.display = 'none'; if (SCRIPT_READERS_DATA.length === 1) setupListenModeForReader(0); else sentenceContainerShared.innerHTML = "<p>Aucune donnée de lecteur.</p>"; } 
+        if (SCRIPT_READERS_DATA.length <= 1) { if (readerSelectGroup) readerSelectGroup.style.display = 'none'; if (SCRIPT_READERS_DATA.length === 1) setupListenModeForReader(0); else sentenceContainerShared.innerHTML = "<p>لا توجد بيانات للقارئ.</p>"; } 
         else { if (readerSelectGroup) readerSelectGroup.style.display = 'block'; readerSelect.value = "0"; setupListenModeForReader(0); } 
         listen_playPauseButton.onclick = listen_toggleAudio; listen_audioPlayer.ontimeupdate = listen_highlightWords; 
         listen_audioPlayer.onended = () => { listen_playPauseButton.textContent = "🔄"; listen_isPaused = true; listen_audioWasEnded = true; listen_words.forEach(w => { if (w.classList.contains('highlight-active-word')) {w.classList.remove('highlight-active-word'); w.classList.add('processed-word');} else if (w.hasAttribute('data-time') && parseFloat(w.dataset.time) <= listen_audioPlayer.currentTime) {w.classList.add('processed-word');}}); listen_playPauseButton.classList.add('btn-pulsing'); }; 
@@ -403,11 +423,11 @@
 
     const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognitionAPI) { 
-        memorize_recognition = new SpeechRecognitionAPI(); memorize_recognition.continuous = true; memorize_recognition.interimResults = true; memorize_recognition.lang = 'fr-FR';
-        memorize_recognition.onstart = () => { memorize_isRecognizing = true; memorize_accumulatedFinalTranscript = ""; memorize_speechButton.textContent = "🔴 Écoute en cours..."; memorize_speechButton.classList.add('listening'); memorize_speechButton.classList.remove('btn-pulsing'); memorize_speechStatus.textContent = "Parlez maintenant..."; if (memorize_restartTimeout) clearTimeout(memorize_restartTimeout); if (memorize_silenceTimeout) clearTimeout(memorize_silenceTimeout); memorize_restartTimeout = null; memorize_silenceTimeout = null; };
+        memorize_recognition = new SpeechRecognitionAPI(); memorize_recognition.continuous = true; memorize_recognition.interimResults = true; memorize_recognition.lang = 'fr-FR'; /* Kept as fr-FR per original, translate only UI */
+        memorize_recognition.onstart = () => { memorize_isRecognizing = true; memorize_accumulatedFinalTranscript = ""; memorize_speechButton.textContent = "🔴 الاستماع جارٍ..."; memorize_speechButton.classList.add('listening'); memorize_speechButton.classList.remove('btn-pulsing'); memorize_speechStatus.textContent = "تحدث الآن..."; if (memorize_restartTimeout) clearTimeout(memorize_restartTimeout); if (memorize_silenceTimeout) clearTimeout(memorize_silenceTimeout); memorize_restartTimeout = null; memorize_silenceTimeout = null; };
         memorize_recognition.onend = () => { memorize_isRecognizing = false; if (memorize_restartTimeout) clearTimeout(memorize_restartTimeout); if (memorize_silenceTimeout) clearTimeout(memorize_silenceTimeout); memorize_restartTimeout = null; memorize_silenceTimeout = null; if (memorize_shouldRestart && memorize_currentWordIndex < memorize_wordSpans.length) { memorize_restartTimeout = setTimeout(() => { if (!memorize_isRecognizing && memorize_shouldRestart && memorize_currentWordIndex < memorize_wordSpans.length) { try { memorize_recognition.start(); } catch (e) { memorize_shouldRestart = false; memorize_updateUIForStopped(); } } }, 100); } else { memorize_updateUIForStopped(); } };
-        function memorize_updateUIForStopped() { memorize_speechButton.textContent = "🎤 Commencer à parler"; memorize_speechButton.classList.remove('listening'); if (memorize_currentWordIndex < memorize_wordSpans.length) { memorize_speechButton.classList.add('btn-pulsing'); } else { memorize_speechButton.classList.remove('btn-pulsing'); } if (memorize_currentWordIndex < memorize_wordSpans.length && memorize_currentWordIndex > 0) { memorize_speechStatus.textContent = "Écoute arrêtée. Appuyez pour continuer."; } else if (memorize_currentWordIndex === 0) { memorize_speechStatus.textContent = "Appuyez sur \"Démarrer\" et parlez"; } else if (memorize_currentWordIndex >= memorize_wordSpans.length) { /* Message set by onresult */ } }
-        memorize_recognition.onerror = (event) => { let errorMsg = "Erreur de reconnaissance : " + event.error; if (event.error === 'aborted' && memorize_shouldRestart) return; if (event.error === 'no-speech' && memorize_shouldRestart && memorize_currentWordIndex < memorize_wordSpans.length) return; if (!memorize_shouldRestart || (event.error !== 'no-speech' && event.error !== 'aborted')) { memorize_speechStatus.textContent = errorMsg; memorize_isRecognizing = false; memorize_updateUIForStopped(); } };
+        function memorize_updateUIForStopped() { memorize_speechButton.textContent = "🎤 ابدأ التحدث"; memorize_speechButton.classList.remove('listening'); if (memorize_currentWordIndex < memorize_wordSpans.length) { memorize_speechButton.classList.add('btn-pulsing'); } else { memorize_speechButton.classList.remove('btn-pulsing'); } if (memorize_currentWordIndex < memorize_wordSpans.length && memorize_currentWordIndex > 0) { memorize_speechStatus.textContent = "توقف الاستماع. اضغط للمتابعة."; } else if (memorize_currentWordIndex === 0) { memorize_speechStatus.textContent = "اضغط على \"ابدأ\" وتحدث"; } else if (memorize_currentWordIndex >= memorize_wordSpans.length) { /* Message set by onresult */ } }
+        memorize_recognition.onerror = (event) => { let errorMsg = "خطأ في التعرف: " + event.error; if (event.error === 'aborted' && memorize_shouldRestart) return; if (event.error === 'no-speech' && memorize_shouldRestart && memorize_currentWordIndex < memorize_wordSpans.length) return; if (!memorize_shouldRestart || (event.error !== 'no-speech' && event.error !== 'aborted')) { memorize_speechStatus.textContent = errorMsg; memorize_isRecognizing = false; memorize_updateUIForStopped(); } };
         memorize_recognition.onresult = (event) => { 
             if (memorize_silenceTimeout) clearTimeout(memorize_silenceTimeout); 
             memorize_silenceTimeout = null; 
@@ -418,9 +438,9 @@
                 else interimTranscript += transcriptPart; 
             } 
             if (interimTranscript && memorize_isRecognizing) { 
-                memorize_speechStatus.textContent = "Un instant... " + interimTranscript; 
+                memorize_speechStatus.textContent = "لحظة من فضلك... " + interimTranscript; 
                 memorize_silenceTimeout = setTimeout(() => { 
-                    if (memorize_isRecognizing && memorize_shouldRestart && memorize_currentWordIndex < memorize_wordSpans.length) memorize_speechStatus.textContent = "En attente du mot suivant..."; 
+                    if (memorize_isRecognizing && memorize_shouldRestart && memorize_currentWordIndex < memorize_wordSpans.length) memorize_speechStatus.textContent = "في انتظار الكلمة التالية..."; 
                 }, 3000); 
             } 
             if (memorize_accumulatedFinalTranscript && memorize_currentWordIndex < memorize_wordSpans.length && memorize_isRecognizing) { 
@@ -446,7 +466,7 @@
                         
                         memorize_currentWordIndex++; 
                         if (memorize_currentWordIndex < memorize_wordSpans.length) { 
-                            memorize_speechStatus.textContent = "Excellent ! Mot suivant..."; 
+                            memorize_speechStatus.textContent = "ممتاز! الكلمة التالية..."; 
                             if (memorize_showFirstWordToggle.checked) { 
                                 const nextWordSpan = memorize_wordSpans[memorize_currentWordIndex]; 
                                 if (nextWordSpan) { 
@@ -457,7 +477,7 @@
                     } 
                 } 
                 if (memorize_currentWordIndex >= memorize_wordSpans.length) { 
-                    memorize_speechStatus.textContent = "🎉 Bravo ! Vous avez terminé la sourate. 🎉"; 
+                    memorize_speechStatus.textContent = "🎉 أحسنت! لقد أكملت النص. 🎉"; 
                     triggerConfettiEffect(); 
                     memorize_shouldRestart = false; 
                     if (memorize_isRecognizing) memorize_recognition.stop(); else memorize_updateUIForStopped(); 
@@ -522,15 +542,15 @@
             } 
         } 
         
-        memorize_speechStatus.textContent = "Appuyez sur \"Démarrer\" et parlez"; 
+        memorize_speechStatus.textContent = "اضغط على \"ابدأ\" وتحدث"; 
         if (memorize_isRecognizing) memorize_recognition.stop(); else memorize_updateUIForStopped();
     }
     function initMemorizeMode() { 
         memorizeModeUI.style.display = 'block'; sentenceContainerShared.style.display = 'block'; sentenceContainerShared.classList.add('memorize-mode-active'); 
         memorize_speechButton.classList.add('btn-pulsing'); 
         if (SCRIPT_READERS_DATA.length > 0) { generateSentenceSpans(SCRIPT_READERS_DATA[0]); memorize_wordSpans = allWordSpansShared; } 
-        else { sentenceContainerShared.innerHTML = "<p>Aucun texte configuré.</p>"; memorize_wordSpans = []; allWordSpansShared = []; } 
-        if (!SpeechRecognitionAPI) { memorize_speechButton.disabled = true; memorize_speechButton.textContent = "Non supporté"; memorize_resetButton.disabled = true; memorize_speechStatus.textContent = "Reconnaissance vocale non supportée."; return; } 
+        else { sentenceContainerShared.innerHTML = "<p>لم يتم تكوين نص.</p>"; memorize_wordSpans = []; allWordSpansShared = []; } 
+        if (!SpeechRecognitionAPI) { memorize_speechButton.disabled = true; memorize_speechButton.textContent = "غير مدعوم"; memorize_resetButton.disabled = true; memorize_speechStatus.textContent = "التعرف على الصوت غير مدعوم."; return; } 
         else { memorize_speechButton.disabled = false; memorize_resetButton.disabled = false; } 
         memorize_wordSpans.forEach(span => { span.dataset.word = memorize_normalizeArabic(span.textContent); span.style.cursor = 'default'; }); 
         memorize_resetActivity(); 
